@@ -1,0 +1,2 @@
+playlist small 'https://youtube.com/playlist?list=PL7D6Y3Oxhe-F-iq88H-hZoDoeWggATyTB&si=iUPR06lAiz6DKO9h'
+large 'https://youtube.com/playlist?list=PLhNcogQpiIfVYjStuQHMBx6JKaQb0660e&si=ERmwurIsKIbTElp-'
