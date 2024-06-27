@@ -68,23 +68,31 @@ def printer2(data: list[list[str]], y: int, c_pos: int, style: dict, window) -> 
 
 def filter(stream_str: list, stream) -> tuple:
     rstream: list = [None, None]
-    for i in stream.filter(type='video').filter(file_extension='mp4'):
+    vStream: list = list()
+    jump: bool = False
+    for i in stream.filter(type='video'):
         if stream_str[0] is None:
             rstream[0] = None
+            jump = True
             break
 
         if i.is_progressive:
             continue
 
         if int(i.resolution[:-1]) == stream_str[0]:
-            rstream[0] = i
-            break
+            vStream.append(i)
+
+    if len(vStream) == 0:
+        if not jump:
+            for i in stream.filter(type='video'):
+                if int(i.resolution[:-1]) == 360 and not i.is_progressive:
+                    rstream[0] = i
+                    stream_str[0] = 360
+                    break
+        else:
+            pass
     else:
-        for i in stream.filter(type='video'):
-            if int(i.resolution[:-1]) == 360 and not i.is_progressive:
-                rstream[0] = i
-                stream_str[0] = 360
-                break
+        rstream[0] = reduce(lambda x, y: x if (x.filesize_mb < y.filesize_mb) else y, vStream)
     
     for i in stream.filter(type='audio'):
         if int(i.abr[:-4]) == stream_str[1]:

@@ -48,7 +48,7 @@ class Hover():
                 _, a, b, _, _ = curses.getmouse()
                 if a >= 0 and b>= 0:
                     if _ == curses.BUTTON1_CLICKED:
-                        if a >= self.__x and a <= (self.__x + self.__hoverWidth) and b >= self.__y and b < (self.__y + self.__hoverHeight -1):
+                        if a >= self.__x and a <= (self.__x + self.__hoverWidth) and b >= self.__y and b < (self.__y + self.__hoverHeight):
                             return  int((b - self.__y)/2) + i 
                         else:
                             return None

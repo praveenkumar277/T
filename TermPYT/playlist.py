@@ -1,11 +1,11 @@
-from pytube import YouTube, Playlist, exceptions, StreamQuery, Stream
+from pytube import Playlist, StreamQuery, exceptions, Stream
 import curses
 import hover
 import printer
 import time
 
 class PlaylistAV():
-    def __init__(self, url: str, data: list[dict], Window = curses.initscr()) -> None:
+    def __init__(self, url: str, data: list[dict], Window) -> None:
         self.url = url
         self.window = Window
         self.time = 0
@@ -27,13 +27,19 @@ class PlaylistAV():
             self.__stream_str: list = [self.__usr_stream[0] ['res'], self.__usr_stream[1] ['abr']]
 
         #Hover
-        options = ["Edit streams", "Finish", "Exit"]
+        options = ["Edit streams", "Inv Select", "Finish", "Exit"]
         self.__menu: hover.Hover = hover.Hover(options, 0, self.__maxx - 14, self.window.getmaxyx(), (0, 0))
 
         # Getting Playlist info
         self.window.addstr(self.__maxy -1, 1, "Fetching ")
         self.__plist: list = list()
-        self.__playlist: Playlist = Playlist(self.url)
+        try:
+            self.__playlist: Playlist = Playlist(self.url)
+        except:
+            curses.endwin()
+            print("KeyError: Invalid Url")
+            time.sleep(2)
+
         self.title: str = self.__playlist.title
         self.__length: int = self.__playlist.length
         for i, j in enumerate(self.__playlist.videos):
@@ -43,6 +49,7 @@ class PlaylistAV():
             self.window.addstr(self.__maxy -1, 10, "{}/{} {}%".format(i +1, self.__length, str(int(((i +1) / self.__length) * 100))))
             self.window.addstr(self.__maxy -1, self.__maxx -13, "eta {}".format(self.__hms_str(*self.__hms(int((end - start) * (self.__length - (i + 1)))))))
             self.window.refresh()
+        self.__length = len(self.__plist)
 
     def __load_playlist(self) -> None:
         self.__list: list = list()
@@ -97,7 +104,7 @@ class PlaylistAV():
         self.window.refresh()
         return streams[l] if l is not None else None
 
-    def __playlist_av(self) -> None:
+    def __playlist_av(self) -> list | None:
         while not self.__break:
             for j in range(self.__n):
                 if self.__i + j in self.__removed:
@@ -127,6 +134,16 @@ class PlaylistAV():
                                     self.__loadStream()
                                     self.__load_playlist()
 
+                            elif k == 1:
+                                self.__invertSelect()
+
+                            elif k == 2:
+                                return self.__finish()
+
+                            elif k == 3:
+                                self.__exit()
+                                continue
+
                             self.__box.boxes(self.__n)
                             self.window.addstr(0, self.__maxx - 1, ':')
                             self.window.refresh()
@@ -141,7 +158,6 @@ class PlaylistAV():
                                         pass 
                                     else:
                                         self.__updateStream(choice, (None, selected_stream))
-                                        self.__selected = selected_stream
                                     continue
                                 elif a > self.__maxx - 17 and a < self.__maxx - 10:
                                     selected_stream = self.__selectStream(self.__plist[choice][4], type='video', x=a, y=b)
@@ -162,12 +178,29 @@ class PlaylistAV():
                     elif _ == curses.BUTTON5_PRESSED:
                         self.__i = (self.__i + 1) if (self.__i + self.__n) < len(self.__list) else self.__i
 
-            elif key == ord('q'):
-                return
+    def __invertSelect(self) -> None:
+        for i in range(len(self.__plist)):
+            if i in self.__removed:
+                self.__removed.remove(i)
+            else:
+                self.__removed.append(i)
+
+    def __exit(self) -> None:
+        self.__break = True
+
+    def __finish(self) -> list:
+        PLAYLIST: list = list()
+        for i, j in enumerate(self.__plist):
+            if i in self.__removed:
+                continue
+            else:
+                PLAYLIST.append(j)
+        return PLAYLIST
        
-    def playlist(self):
+    def playlist(self) -> list | None:
         self.__load_playlist()
-        self.__playlist_av()
+        PLAYLIST = self.__playlist_av()
+        return PLAYLIST
 
 if __name__ == '__main__':
     c = curses.initscr() 
