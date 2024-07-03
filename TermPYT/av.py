@@ -1,8 +1,6 @@
 from pytube import YouTube, exceptions
 import curses
 import printer
-import playlist
-import downloader
 
 class AV():
     def __init__(self, url: str, Window = curses.initscr()) -> None:
@@ -112,12 +110,29 @@ class AV():
                 self.__load_av()
             else:
                 self.__break = True
-   
-    def start(self) -> list:
+
+    def __returnAV(self) -> list[list]:
+        dload: list = list()
+        stream: list = list()
+        if len(self.__dload) == 1:
+            if self.__dload[0].is_progressive:
+                dload.append([int(self.__dload[0].resolution[:-1]), None])
+                stream = [self.__dload[0], None]
+            else:
+                dload.append([None, int(self.__dload[0].abr[:-4])])
+                stream = [None, self.__dload[0]]
+        else:
+            dload.append([int(self.__dload[0].resolution[:-1]), int(self.__dload[1].abr[:-4])])
+            stream = [self.__dload[0], self.__dload[1]]
+        dload = dload + [self.__yt.length, sum(map(lambda x: x.filesize_mb if x is not None else 0, stream)), self.__yt.watch_url, stream]
+
+        return [dload]
+
+
+    def __call__(self) -> list:
         self.__load_av()
         self.__av()
-        return self.__dload
-        #self.download([self.__dload])
+        return self.__dload if self.isPlaylist else self.__returnAV()
 
     #######################################################
 
@@ -128,9 +143,9 @@ if __name__ == '__main__':
     curses.mousemask(curses.ALL_MOUSE_EVENTS)
     curses.noecho()
     curses.curs_set(0)
-    b = AV('https://youtube.com/playlist?list=PLqhTK1mPb1pk9zugArRFvVjvyUEmKGI8P&si=Sd3Bp6Gcqo5L5qdS',c)
-    #b = AV('https://youtu.be/CzSL-YKjYn4?si=R00q1KYp7egDfimwH0',c)
-    a= b.start()
+    #b = AV('https://youtube.com/playlist?list=PLqhTK1mPb1pk9zugArRFvVjvyUEmKGI8P&si=Sd3Bp6Gcqo5L5qdS',c)
+    b = AV('https://youtu.be/CzSL-YKjYn4?si=R00q1KYp7egDfimwH0',c)
+    a= b()
     curses.endwin()
     print(a) 
 

@@ -44,7 +44,7 @@ class PlaylistAV():
         self.__length: int = self.__playlist.length
         for i, j in enumerate(self.__playlist.videos):
             start = time.time()
-            self.__plist.append([j.title, j.length, self.__playlist_type, self.__stream_str, None, None])
+            self.__plist.append([j.title, j.length, self.__playlist_type, self.__stream_str, None, None, j, j.watch_url])
             end = time.time()
             self.window.addstr(self.__maxy -1, 10, "{}/{} {}%".format(i +1, self.__length, str(int(((i +1) / self.__length) * 100))))
             self.window.addstr(self.__maxy -1, self.__maxx -13, "eta {}".format(self.__hms_str(*self.__hms(int((end - start) * (self.__length - (i + 1)))))))
@@ -139,7 +139,7 @@ class PlaylistAV():
 
                             elif k == 2:
                                 return self.__finish()
-
+                            
                             elif k == 3:
                                 self.__exit()
                                 continue
@@ -194,13 +194,18 @@ class PlaylistAV():
             if i in self.__removed:
                 continue
             else:
-                PLAYLIST.append(j)
+                PLAYLIST.append([j[3], j[1], None if j[5] is None else ((j[5][0].filesize_mb if j[5][0] is not None else 0) + (j[5][1].filesize_mb)),j[6].watch_url, None])
         return PLAYLIST
        
-    def playlist(self) -> list | None:
-        self.__load_playlist()
-        PLAYLIST = self.__playlist_av()
-        return PLAYLIST
+    def __call__(self) -> list | None:
+        try:
+            self.__load_playlist()
+            PLAYLIST = self.__playlist_av()
+            return PLAYLIST
+        except Exception as e:
+            curses.endwin()
+            print(e)
+
 
 if __name__ == '__main__':
     c = curses.initscr() 
@@ -215,7 +220,7 @@ if __name__ == '__main__':
     b = PlaylistAV('https://youtube.com/playlist?list=PLLVAlrhlWEFzGpmql5-FJrWQ5dIGO14HT&si=SHfpjQ7IntNX8nfl', data1, c)
     #b = PlaylistAV('https://youtube.com/playlist?list=PL7D6Y3Oxhe-F-iq88H-hZoDoeWggATyTB&si=hYlzYQQT-miDjBtD',data1,c)
     #b = PlaylistAV('https://youtube.com/playlist?list=PLMC9KNkIncKtPzgY-5rmhvj7fax8fdxoj&si=7B9BC1Ee642VOXSp', data1, c)
-    a= b.playlist()
+    a= b()
     curses.endwin()
-    print(a)
+    print(a[0] if a is not None else a)
 
